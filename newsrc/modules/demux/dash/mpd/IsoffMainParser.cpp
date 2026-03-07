@@ -438,7 +438,7 @@ void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode
         {
             adaptive::encryption::CommonEncryption encryption;
             encryption.method = adaptive::encryption::CommonEncryption::Method::AES_128_CTR;
-            encryption.iv = kid;
+            encryption.iv = std::vector<unsigned char>(kid.begin(), kid.end());
             encryption.uri = url;
             currentRepresentation->setEncryption(encryption);
         }
