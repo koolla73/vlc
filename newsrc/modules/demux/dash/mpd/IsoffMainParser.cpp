@@ -49,6 +49,14 @@
 #include <cstdio>
 #include <limits>
 #include <fstream>
+#include <iostream>
+#ifdef _WIN32
+#include <windows.h>
+#define SYSERROR()  GetLastError()
+#else
+#include <errno.h>
+#define SYSERROR()  errno
+#endif
 
 using namespace dash::mpd;
 using namespace adaptive::xml;
@@ -57,8 +65,17 @@ using namespace adaptive::playlist;
 void writeToLog(const std::string& text)
 {
     std::ofstream logfile ("/home/runner/work/vlc/vlc/sampleapp/log.txt", std::ofstream::out | std::ofstream::app);
-    logfile << text << std::endl;
-    logfile.close();
+    if (logfile.is_open())
+    {
+        logfile << text << std::endl;
+        logfile.flush();
+        logfile.close();
+    }
+    else
+    {
+        std::cerr << "Failed to open file : " << SYSERROR() << std::endl;
+        exit(-1);
+    }
 }
 
 IsoffMainParser::IsoffMainParser    (Node *root_, vlc_object_t *p_object_,
