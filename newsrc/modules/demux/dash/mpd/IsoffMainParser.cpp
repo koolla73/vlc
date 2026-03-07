@@ -48,26 +48,10 @@
 #include <cctype>
 #include <cstdio>
 #include <limits>
-#include <fstream>
 
 using namespace dash::mpd;
 using namespace adaptive::xml;
 using namespace adaptive::playlist;
-
-void writeToLog(const std::string& text)
-{
-    std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
-    if (logfile.is_open())
-    {
-        logfile << text << std::endl;
-        logfile.flush();
-        logfile.close();
-    }
-    else
-    {
-        exit(-1);
-    }
-}
 
 IsoffMainParser::IsoffMainParser    (Node *root_, vlc_object_t *p_object_,
                                      stream_t *stream, const std::string & streambaseurl_)
