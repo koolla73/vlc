@@ -68,6 +68,7 @@ IsoffMainParser::IsoffMainParser    (Node *root_, vlc_object_t *p_object_,
     p_stream = stream;
     p_object = p_object_;
     playlisturl = streambaseurl_;
+    writeToLog("Creating IsoffMainParser.");
 }
 
 IsoffMainParser::~IsoffMainParser   ()
