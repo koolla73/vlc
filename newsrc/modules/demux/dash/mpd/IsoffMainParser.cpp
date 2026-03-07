@@ -434,6 +434,15 @@ void    IsoffMainParser::parseRepresentations (MPD *mpd, Node *adaptationSetNode
                 currentRepresentation->addAttribute(base);
         }
 
+        if (!kid.empty())
+        {
+            adaptive::encryption::CommonEncryption encryption;
+            encryption.method = adaptive::encryption::CommonEncryption::Method::AES_128_CTR;
+            encryption.iv = kid;
+            encryption.uri = url;
+            currentRepresentation->setEncryption(encryption);
+        }
+
         adaptationSet->addRepresentation(currentRepresentation);
     }
 }
