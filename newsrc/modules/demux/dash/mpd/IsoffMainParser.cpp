@@ -318,8 +318,8 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
         {
             if ((*contentProtectionIt)->getAttributeValue("schemeIdUri") == "urn:mpeg:dash:mp4protection:2011")
             {
-                const std::vector<adaptive::xml::Attribute> attributes = (*contentProtectionIt)->getAttributes();
-                for (const adaptive::xml::Attribute& attribute : attributes)
+                const std::vector<adaptive::xml::Node::Attribute> attributes = (*contentProtectionIt)->getAttributes();
+                for (const adaptive::xml::Node::Attribute& attribute : attributes)
                     writeToLog("Attribute name: " + attribute.name + "\tValue: " + attribute.value + "\tNamespace: " + attribute.ns.get());
                 kid = (*contentProtectionIt)->getAttributeValue("default_KID");
                 kid.erase(std::remove(kid.begin(), kid.end(), '-'), kid.end());
