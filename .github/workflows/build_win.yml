@@ -1,0 +1,94 @@
+name: Build LibVLC for Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: yesolutions/mirror-action@662fce0eced8996f64d7fa264d76cddd84827f33
+        with:
+          REMOTE: '${{ secrets.GITLAB_REPO_URL }}'
+          GIT_USERNAME: ${{ secrets.GITLAB_USERNAME }}
+          GIT_PASSWORD: ${{ secrets.GITLAB_PASSWORD }}
+            
+      - name: Download LibVLC source code
+        run: git clone --depth 1 -b master https://github.com/videolan/vlc
+
+      - name: Copy modified source code to LibVLC
+        run: cp -R ${{ github.workspace }}/newsrc/* ${{ github.workspace }}/vlc
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install autopoint gcc-mingw-w64-x86-64 gettext g++-mingw-w64-x86-64 mingw-w64-tools yasm
+
+      - name: Compile LibVLC
+        run: |
+          mkdir vlc-installed
+          mkdir build
+          cd build
+          CONFIGFLAGS="--disable-sout --disable-lua --disable-vlm --disable-archive --disable-live555 --disable-dc1394 --disable-dv1394 --disable-linsys \
+          --disable-dvdread --disable-dvdnav --disable-bluray --disable-opencv --disable-smbclient --disable-dsm --disable-sftp --disable-nfs --disable-smb2 --disable-v4l2 --disable-amf-scaler \
+          --disable-amf-enhancer --disable-amf-frc --disable-decklink --disable-vcd --disable-vnc --disable-freerdp --disable-asdcp --disable-dvbpsi --disable-dvbcsa --disable-gme --disable-sid \
+          --disable-ogg --disable-shout --disable-matroska --disable-mod --disable-mpc --disable-shine --disable-omxil --disable-rpi-omxil --disable-mad --disable-mpg123 --disable-gst-decode \
+          --disable-aom --disable-rav1e --disable-dav1d --disable-vpx --disable-twolame --disable-fdkaac --disable-flac --disable-vorbis --disable-tremor --disable-speex --disable-rnnoise --disable-opus \
+          --disable-theora --disable-oggspots --disable-daala --disable-openapv --disable-bpg --disable-x262 --disable-x265 --disable-x264 --disable-x26410b --disable-davs2 --disable-fluidsynth \
+          --disable-fluidlite --disable-zvbi --disable-telx --disable-aribcaption --disable-aribsub --disable-aribb25 --disable-kate --disable-tiger --disable-css --disable-xcb --disable-vdpau \
+          --disable-svg --disable-svgdec --disable-caca --disable-kva --disable-mmal --disable-pulse --disable-alsa --disable-oss --disable-sndio --disable-jack --disable-opensles --disable-soxr \
+          --disable-kai --disable-chromaprint --disable-chromecast --disable-qt --disable-skins2 --disable-ncurses --disable-lirc --disable-srt --disable-rist --disable-goom --disable-projectm \
+          --disable-vsxu --disable-avahi --disable-udev --disable-mtp --disable-upnp --disable-microdns --disable-taglib --disable-secret --disable-kwallet --disable-update-check \
+          --disable-osx-notifications --disable-notify --disable-medialibrary --disable-vlc" ../vlc/extras/package/win32/build.sh -a x86_64 -z -o ${{ github.workspace }}/vlc-installed
+
+      - name: Upload LibVLC
+        uses: actions/upload-artifact@v4
+        with:
+          name: LibVLC
+          path: ${{ github.workspace }}/vlc-installed
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+
+  Test:
+    needs: Build
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download LibVLC
+        uses: actions/download-artifact@v5
+        with:
+          name: LibVLC
+          
+      - name: Copy LibVLC libraries and headers to sample application folder 
+        shell: cmd
+        run: |
+          mkdir sampleapp\build\Release\plugins
+          mkdir sampleapp\include
+          mkdir sampleapp\lib
+          copy /y /v ${{ github.workspace }}\libvlc.dll ${{ github.workspace }}\sampleapp\build\Release
+          copy /y /v ${{ github.workspace }}\libvlccore.dll ${{ github.workspace }}\sampleapp\build\Release
+          xcopy /s /y ${{ github.workspace }}\sdk\include ${{ github.workspace }}\sampleapp\include
+          copy /y /v ${{ github.workspace }}\sdk\lib\*.lib ${{ github.workspace }}\sampleapp\lib
+          xcopy /s /y ${{ github.workspace }}\plugins ${{ github.workspace }}\sampleapp\build\Release\plugins
+        
+      - name: Compile sample application
+        working-directory: ${{ github.workspace }}\sampleapp
+        shell: cmd
+        run: |
+          cmake -B build
+          cmake --build build --config Release
+        
+      - name: Run sample application
+        working-directory: ${{ github.workspace }}\sampleapp\build\Release
+        shell: cmd
+        run: SampleApp.exe
