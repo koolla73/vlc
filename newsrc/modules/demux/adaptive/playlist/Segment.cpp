@@ -41,18 +41,21 @@
 using namespace adaptive::http;
 using namespace adaptive::playlist;
 
-void writeToLog(const std::string& text)
+namespace
 {
-    std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
-    if (logfile.is_open())
+    void writeToLog(const std::string& text)
     {
-        logfile << text << std::endl;
-        logfile.flush();
-        logfile.close();
-    }
-    else
-    {
-        exit(-1);
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+        else
+        {
+            exit(-1);
+        }
     }
 }
 
