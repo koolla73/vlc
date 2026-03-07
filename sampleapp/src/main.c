@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     inst = libvlc_new (0, NULL);
 
     /* Create a new item */
-    m = libvlc_media_new_location("http://mycool.movie.com/test.mov");
+    m = libvlc_media_new_location("https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd");
 
     /* Create a media player playing environement */
     mp = libvlc_media_player_new_from_media (inst, m);
