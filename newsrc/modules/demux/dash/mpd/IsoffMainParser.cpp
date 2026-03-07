@@ -320,7 +320,7 @@ void    IsoffMainParser::parseAdaptationSets  (MPD *mpd, Node *periodNode, BaseP
             {
                 const std::vector<adaptive::xml::Node::Attribute> attributes = (*contentProtectionIt)->getAttributes();
                 for (const adaptive::xml::Node::Attribute& attribute : attributes)
-                    writeToLog("Attribute name: " + attribute.name + "\tValue: " + attribute.value + "\tNamespace: " + attribute.ns.get());
+                    writeToLog("Attribute name: " + attribute.name + "\tValue: " + attribute.value + "\tNamespace: " + *attribute.ns.get());
                 kid = (*contentProtectionIt)->getAttributeValue("default_KID");
                 kid.erase(std::remove(kid.begin(), kid.end(), '-'), kid.end());
                 std::transform(kid.begin(), kid.end(), kid.begin(), [](unsigned char c){ return std::tolower(c); });
