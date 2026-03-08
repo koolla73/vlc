@@ -71,7 +71,7 @@ void SegmentChunk::onDownload(block_t **pp_block)
     std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
     if (logfile.is_open())
     {
-        logfile << "void SegmentChunk::onDownload(block_t **pp_block)\t\tType: " << std::to_string(source->getChunkType()) << std::endl;
+        logfile << "void SegmentChunk::onDownload(block_t **pp_block)\t\tType: " << std::to_string(static_cast<int>(source->getChunkType())) << std::endl;
         logfile.flush();
         logfile.close();
     }
