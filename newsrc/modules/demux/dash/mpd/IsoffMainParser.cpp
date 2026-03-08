@@ -48,6 +48,7 @@
 #include <cctype>
 #include <cstdio>
 #include <limits>
+#include <fstream>
 
 using namespace dash::mpd;
 using namespace adaptive::xml;
