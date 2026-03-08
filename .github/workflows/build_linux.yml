@@ -84,3 +84,12 @@ jobs:
       - name: Run sample application
         working-directory: ${{ github.workspace }}/sampleapp/build
         run: ./SampleApp
+
+      - name: Upload log file
+        uses: actions/upload-artifact@v4
+        with:
+          name: Log
+          path: ${{ github.workspace }}/sampleapp/log.txt
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
