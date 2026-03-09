@@ -32,8 +32,8 @@ jobs:
         run: |
           cd vlc/modules/demux/adaptive/encryption
           for FILE in Ap4*;
-            sed "/Keyring.hpp/a text" ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
-            sed "/Keyring.hpp/a tetxt" ${{ github.workspace }}/vlc/modules/demux/meson.build;
+            sed '/Keyring.hpp/a text' ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
+            sed '/Keyring.hpp/a tetxt' ${{ github.workspace }}/vlc/modules/demux/meson.build;
           done
 
       - name: Upload meson
