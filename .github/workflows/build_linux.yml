@@ -33,7 +33,7 @@ jobs:
           cd vlc/modules/demux/adaptive/encryption
           echo "Fixing meson..."
           for FILE in Ap4*;
-            do sed '/CommonEncryption.hpp\',/a\        \'adaptive/encryption/$FILE\',' ${{ github.workspace }}/vlc/modules/demux/meson.build;
+            do sed '/CommonEncryption.hpp\',/a\        \'adaptive/encryption/$FILE\',' ${{ github.workspace }}/vlc/modules/demux/meson.build
           done
           echo "Fixing Makefile..."
           for FILE in Ap4*;
