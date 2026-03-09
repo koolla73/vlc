@@ -31,6 +31,7 @@ jobs:
       - name: List files
         run: |
           cd vlc/modules/demux/adaptive/encryption
+          shopt -s extglob 
           for FILE in Ap4*;
             sed '/Keyring.hpp/a text' ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
             sed '/Keyring.hpp/a tetxt' ${{ github.workspace }}/vlc/modules/demux/meson.build;
