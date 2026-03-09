@@ -33,7 +33,6 @@ jobs:
           cd vlc/modules/demux/adaptive/encryption
           echo "Listing all files..."
           for FILE in Ap4*;
-            do echo "        'adaptive/encryption/$FILE";
             do sed '/CommonEncryption.hpp\',/a\        \'adaptive/encryption/$FILE\',' ${{ github.workspace }}/vlc/modules/demux/meson.build;
             do sed '/CommonEncryption.hpp \/a\    demux/adaptive/encryption/$FILE \' ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
           done
