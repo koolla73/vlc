@@ -31,13 +31,9 @@ jobs:
       - name: List files
         run: |
           cd vlc/modules/demux/adaptive/encryption
-          echo "Fixing meson..."
           for FILE in Ap4*;
-            do sed '/CommonEncryption.hpp\',/a\        \'adaptive/encryption/$FILE\',' ${{ github.workspace }}/vlc/modules/demux/meson.build
-          done
-          echo "Fixing Makefile..."
-          for FILE in Ap4*;
-            do sed '/CommonEncryption.hpp \/a\    demux/adaptive/encryption/$FILE \' ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
+            sed '/Keyring.hpp/a     demux\/adaptive\/encryption\/$FILE \\' ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
+            sed '/Keyring.hpp/a         \'adaptive\/encryption\/Keyring.hpp\',' ${{ github.workspace }}/vlc/modules/demux/meson.build;
           done
 
       - name: Upload meson
