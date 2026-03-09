@@ -35,3 +35,26 @@ jobs:
           for FILE in Ap4*;
             do echo "        'adaptive/encryption/$FILE";
           done
+          cd ${{ github.workspace }}/vlc/modules/demux
+          for FILE in Ap4*;
+            do sed '/CommonEncryption.hpp\',/a\        'adaptive/encryption/$FILE\',' meson.build;
+            do sed '/CommonEncryption.hpp \/a\    demux/adaptive/encryption/$FILE \' Makefile.am;
+          done
+
+      - name: Upload meson
+        uses: actions/upload-artifact@v4
+        with:
+          name: meson
+          path: ${{ github.workspace }}/vlc/modules/demux/meson.build
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+
+      - name: Upload Makefile
+        uses: actions/upload-artifact@v4
+        with:
+          name: makefile
+          path: ${{ github.workspace }}/vlc/modules/demux/Makefile.am
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
