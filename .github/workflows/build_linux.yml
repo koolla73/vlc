@@ -37,7 +37,7 @@ jobs:
           done
           cd ${{ github.workspace }}/vlc/modules/demux
           for FILE in Ap4*;
-            do sed '/CommonEncryption.hpp\',/a\        'adaptive/encryption/$FILE\',' meson.build;
+            do sed '/CommonEncryption.hpp\',/a\        \'adaptive/encryption/$FILE\',' meson.build;
             do sed '/CommonEncryption.hpp \/a\    demux/adaptive/encryption/$FILE \' Makefile.am;
           done
 
