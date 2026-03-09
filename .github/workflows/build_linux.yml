@@ -32,4 +32,4 @@ jobs:
         run: |
           cd vlc/modules/demux/adaptive/encryption
           echo "Listing all files..."
-          for FILE in Ap4-*; do echo $FILE; done
+          for FILE in Ap4*; do echo $FILE; done
