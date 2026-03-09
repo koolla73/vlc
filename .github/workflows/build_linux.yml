@@ -33,7 +33,6 @@ jobs:
           cd vlc/modules/demux/adaptive/encryption
           for FILE in Ap4*;
             sed '/Keyring.hpp/a     demux\/adaptive\/encryption\/$FILE \' ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
-            sed '/Keyring.hpp/a         \'adaptive\/encryption\/$FILE\'\,' ${{ github.workspace }}/vlc/modules/demux/meson.build;
           done
 
       - name: Upload meson
