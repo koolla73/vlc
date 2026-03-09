@@ -118,7 +118,7 @@ namespace
         gcry_cipher_decrypt(handle, (void*)buffer, size, nullptr, 0);
         writeToLog("Decryption complete.");
         
-        std::ofstream outFile("out.mp4", std::ios::out | std::ios::binary);
+        std::ofstream outFile("I:/out.mp4", std::ios::out | std::ios::binary);
         outFile.write(buffer, size);
         outFile.close();
       
