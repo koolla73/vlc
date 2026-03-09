@@ -125,6 +125,64 @@ namespace
         delete[] buffer;
         writeToLog("All operations completed.");
     }
+
+    void testDecryptCBC()
+    {
+        std::ifstream kidFile("I:/kid_cbc.txt", std::ifstream::in);
+        std::ifstream keyFile("I:/key_cbc.txt", std::ifstream::in);
+        std::string kidString;
+        std::string keyString;
+        std::getline(kidFile, kidString);
+        std::getline(keyFile, keyString);
+        kidFile.close();
+        keyFile.close();
+        writeToLog("Kid is: " + kidString);
+        writeToLog("Key is: " + keyString);
+        std::vector<char> kid = hexToBytes(kidString);
+        std::vector<char> key = hexToBytes(keyString);
+        std::string kidHex(kid.begin(), kid.end());
+        std::string keyHex(key.begin(), key.end());
+        writeToLog("Kid hex is: " + kidHex);
+        writeToLog("Key hex is: " + keyHex + "\n");
+        vlc_gcrypt_init();
+        writeToLog("GCrypt init!");
+        gcry_cipher_hd_t handle;
+        if( gcry_cipher_open(&handle, GCRY_CIPHER_AES, GCRY_CIPHER_MODE_CBC, 0) ||
+                gcry_cipher_setkey(handle, &key[0], 16) ||
+                gcry_cipher_setiv(handle, &kid[0], 16) )
+        {
+            writeToLog("Error setting up GCrypt.");
+            gcry_cipher_close(handle);
+            return;
+        }
+        writeToLog("Succeeded setting up GCrypt.");
+        std::ifstream ifs("I:/in.mp4", std::ifstream::binary);
+        // get pointer to associated buffer object
+        std::filebuf* pbuf = ifs.rdbuf();
+      
+        // get file size using buffer's members
+        std::size_t size = pbuf->pubseekoff (0,ifs.end,ifs.in);
+        pbuf->pubseekpos (0,ifs.in);
+      
+        // allocate memory to contain file data
+        char* buffer = new char[size];
+      
+        // get file data
+        pbuf->sgetn (buffer,size);
+      
+        ifs.close();
+
+        writeToLog("Starting decryption...");
+        gcry_cipher_decrypt(handle, (void*)buffer, size, nullptr, 0);
+        writeToLog("Decryption complete.");
+        
+        std::ofstream outFile("I:/out.mp4", std::ios::out | std::ios::binary);
+        outFile.write(buffer, size);
+        outFile.close();
+      
+        delete[] buffer;
+        writeToLog("All operations completed.");
+    }
 }
 
 CommonEncryption::CommonEncryption()
