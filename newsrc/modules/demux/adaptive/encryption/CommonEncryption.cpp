@@ -121,9 +121,11 @@ namespace
         std::ofstream outFile("I:/out.mp4", std::ios::out | std::ios::binary);
         outFile.write(buffer, size);
         outFile.close();
+
+        gcry_cipher_close(handle);
       
         delete[] buffer;
-        writeToLog("All operations completed.");
+        writeToLog("All operations completed.\n\n\n\n\n\n");
     }
 
     void testDecryptCBC()
@@ -156,7 +158,7 @@ namespace
             return;
         }
         writeToLog("Succeeded setting up GCrypt.");
-        std::ifstream ifs("I:/in.mp4", std::ifstream::binary);
+        std::ifstream ifs("I:/in_cbc.mp4", std::ifstream::binary);
         // get pointer to associated buffer object
         std::filebuf* pbuf = ifs.rdbuf();
       
@@ -176,9 +178,11 @@ namespace
         gcry_cipher_decrypt(handle, (void*)buffer, size, nullptr, 0);
         writeToLog("Decryption complete.");
         
-        std::ofstream outFile("I:/out.mp4", std::ios::out | std::ios::binary);
+        std::ofstream outFile("I:/out_cbc.mp4", std::ios::out | std::ios::binary);
         outFile.write(buffer, size);
         outFile.close();
+
+        gcry_cipher_close(handle);
       
         delete[] buffer;
         writeToLog("All operations completed.");
@@ -189,6 +193,7 @@ CommonEncryption::CommonEncryption()
 {
     method = CommonEncryption::Method::None;
     testDecrypt();
+    testDecryptCBC();
 }
 
 void CommonEncryption::mergeWith(const CommonEncryption &other)
