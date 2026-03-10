@@ -24,9 +24,25 @@ jobs:
       - name: Download LibVLC source code
         run: git clone --depth 1 -b master https://github.com/videolan/vlc
 
+      - name: Download and add Bento4 source code
+        run: |
+          git clone --depth 1 -b master https://github.com/axiomatic-systems/Bento4
+          cp -r Bento4/Source/C++/Core/. newsrc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/Codecs/. newsrc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/Crypto/. newsrc/modules/demux/adaptive/encryption
+          cp -r Bento4/Source/C++/MetaData/. newsrc/modules/demux/adaptive/encryption
+          
       - name: Copy modified source code to LibVLC
         run: cp -R ${{ github.workspace }}/newsrc/* ${{ github.workspace }}/vlc
 
+      - name: Add Bento4 source code to build systems
+        run: |
+          cd vlc/modules/demux/adaptive/encryption
+          for FILE in Ap4*;
+            do sed -i "/Keyring.hpp/a \    demux/adaptive/encryption/$FILE \\\\" ${{ github.workspace }}/vlc/modules/demux/Makefile.am;
+            sed -i "/Keyring.hpp/a \        'adaptive/encryption/$FILE'," ${{ github.workspace }}/vlc/modules/demux/meson.build;
+          done
+          
       - name: Install dependencies
         run: |
           sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
