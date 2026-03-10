@@ -27,6 +27,7 @@
 #endif
 
 #include <stdint.h>
+#include <fstream>
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -59,6 +60,20 @@ using namespace hls::playlist;
 using namespace smooth;
 using namespace smooth::playlist;
 
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+    }
+}
+
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
@@ -83,6 +98,8 @@ static void Close   (vlc_object_t *);
 
 #define ADAPT_LOWLATENCY_TEXT N_("Low latency")
 #define ADAPT_LOWLATENCY_LONGTEXT N_("Overrides low latency parameters")
+
+#define ADAPT_DECRYPTION_KEYS_TEXT N_("Decryption keys.")
 
 static const AbstractAdaptationLogic::LogicType pi_logics[] = {
                                 AbstractAdaptationLogic::LogicType::Default,
@@ -143,6 +160,7 @@ vlc_module_begin ()
                      ADAPT_MAXBUFFER_TEXT, nullptr )
         add_integer( "adaptive-lowlatency", -1, ADAPT_LOWLATENCY_TEXT, ADAPT_LOWLATENCY_LONGTEXT )
             change_integer_list(rgi_latency, ppsz_latency)
+        add_string( "decryption-keys",  "", ADAPT_DECRYPTION_KEYS_TEXT, nullptr )
         set_callbacks( Open, Close )
 vlc_module_end ()
 
@@ -194,6 +212,14 @@ static int Open(vlc_object_t *p_obj)
         if(!b_found)
             msg_Err(p_demux, "Unknown adaptive-logic value '%s'", psz_logic);
         free( psz_logic );
+    }
+
+    char *psz_decryption_keys = var_InheritString(p_obj, "decryption-keys");
+    if ( psz_decryption_keys )
+    {
+        const std::string keys = std::string(psz_decryption_keys);
+        free( psz_decryption_keys );
+        writeToLog("Decryption keys: " + keys);
     }
 
     std::string playlisturl(p_demux->s->psz_url);
