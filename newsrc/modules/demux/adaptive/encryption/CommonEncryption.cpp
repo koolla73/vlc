@@ -102,6 +102,11 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
                 std::string base64Key(rawKeyToBase64);
                 free(rawKeyToBase64);
                 writeToLog("Base64 key is: " + base64Key);
+                char* hexKey = new char[33];
+                vlc_hex_encode_binary(&rawKey[0], rawKey.size(), hexKey);
+                std::string hexString(hexKey);
+                delete[] hexKey;
+                writeToLog("Hex key is: " + hexString);
             }
             else
                 keyCTR = res->getKeyring()->getCustomKey(std::string(encryption.iv.begin(), encryption.iv.end()));
