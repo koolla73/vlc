@@ -57,6 +57,7 @@ namespace adaptive
 
             private:
                 std::vector<unsigned char> key;
+                std::string keyCTR;
                 CommonEncryption encryption;
                 void *ctx;
         };
