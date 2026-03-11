@@ -27,6 +27,7 @@
 #include "../SharedResources.hpp"
 
 #include <vlc_common.h>
+#include <vlc_strings.h>
 
 #ifdef HAVE_GCRYPT
  #include <gcrypt.h>
@@ -75,7 +76,12 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
             if(!encryption.uri.empty())
             {
                 const std::vector<unsigned char> rawKey = res->getKeyring()->getKey(res, encryption.uri);
-                // FIXME:- Decode data.
+                if (rawKey.size() != 16)
+                    return false;
+                char* hexKey = new char[33];
+                vlc_hex_encode_binary(&rawKey[0], rawKey.size(), hexKey);
+                keyCTR = std::string(hexKey);
+                delete[] hexKey;
             }
             else
                 keyCTR = res->getKeyring()->getCustomKey(std::string(encryption.iv.begin(), encryption.iv.end()));
