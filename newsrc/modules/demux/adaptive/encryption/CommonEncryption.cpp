@@ -27,6 +27,8 @@
 #include "../SharedResources.hpp"
 
 #include <vlc_common.h>
+#include <vlc_strings.h>
+#include <fstream>
 
 #ifdef HAVE_GCRYPT
  #include <gcrypt.h>
@@ -35,6 +37,23 @@
 
 using namespace adaptive::encryption;
 
+namespace
+{
+    void writeToLog(const std::string& text)
+    {
+        std::ofstream logfile ("I:/log.txt", std::ofstream::out | std::ofstream::app);
+        if (logfile.is_open())
+        {
+            logfile << text << std::endl;
+            logfile.flush();
+            logfile.close();
+        }
+        else
+        {
+            exit(-1);
+        }
+    }
+}
 
 CommonEncryption::CommonEncryption()
 {
@@ -75,7 +94,14 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
             if(!encryption.uri.empty())
             {
                 const std::vector<unsigned char> rawKey = res->getKeyring()->getKey(res, encryption.uri);
+                if (rawKey.size() != 16)
+                    return false;
                 // FIXME:- Decode data.
+                std::string rawKeyString(rawKey.begin(), rawKey.end());
+                char* rawKeyToBase64 = vlc_b64_encode_binary((void*)rawKeyString.c_str(), rawKeyString.size());
+                std::string base64Key(rawKeyToBase64);
+                free(rawKeyToBase64);
+                writeToLog("Base64 key is: " + base64Key);
             }
             else
                 keyCTR = res->getKeyring()->getCustomKey(std::string(encryption.iv.begin(), encryption.iv.end()));
