@@ -1,7 +1,7 @@
 /*****************************************************************************
- * CommonEncryption.hpp
+ * Keyring.hpp
  *****************************************************************************
- * Copyright (C) 2015-2019 VLC authors and VideoLAN
+ * Copyright (C) 2019 VideoLabs, VLC authors and VideoLAN
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -17,9 +17,14 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-#ifndef COMMONENCRYPTION_H
-#define COMMONENCRYPTION_H
+#ifndef KEYRING_H
+#define KEYRING_H
 
+#include <vlc_common.h>
+#include <vlc_threads.h>
+
+#include <map>
+#include <list>
 #include <vector>
 #include <string>
 
@@ -29,37 +34,23 @@ namespace adaptive
 
     namespace encryption
     {
-        class CommonEncryption
+        using KeyringKey = std::vector<unsigned char>;
+
+        class Keyring
         {
             public:
-                CommonEncryption();
-                void mergeWith(const CommonEncryption &);
-                enum class Method
-                {
-                    None,
-                    AES_128,
-                    AES_128_CTR,
-                    AES_Sample,
-                } method;
-                std::string uri;
-                std::vector<unsigned char> iv;
-        };
-
-        class CommonEncryptionSession
-        {
-            public:
-                CommonEncryptionSession();
-                ~CommonEncryptionSession();
-
-                bool start(SharedResources *, const CommonEncryption &);
-                void close();
-                size_t decrypt(void *, size_t, bool);
+                Keyring(vlc_object_t *);
+                ~Keyring();
+                KeyringKey getKey(SharedResources *, const std::string &);
+                std::string getCustomKey(const std::string &kid);
 
             private:
-                std::vector<unsigned char> key;
-                std::string keyCTR;
-                CommonEncryption encryption;
-                void *ctx;
+                static const int MAX_KEYS = 50;
+                std::map<std::string, KeyringKey> keys;
+                std::map<std::string, std::string> customKeys;
+                std::list<std::string> lru;
+                vlc_object_t *obj;
+                vlc_mutex_t lock;
         };
     }
 }
