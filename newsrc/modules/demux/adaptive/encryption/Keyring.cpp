@@ -112,3 +112,10 @@ KeyringKey Keyring::getKey(SharedResources *resources, const std::string &uri)
 
     return key;
 }
+
+std::string Keyring::getCustomKey(const std::string &kid)
+{
+    std::map<std::string, std::string>::iterator it = customKeys.find(kid);
+
+    return it == customKeys.end() ? "" : (*it).second;
+}
