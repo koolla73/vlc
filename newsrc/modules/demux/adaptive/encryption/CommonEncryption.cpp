@@ -73,7 +73,10 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
         if (keyCTR.empty())
         {
             if(!encryption.uri.empty())
-                keyCTR = res->getKeyring()->getKey(res, encryption.uri);    // FIXME:- Must send ClearKey request.
+            {
+                const std::vector<unsigned char> rawKey = res->getKeyring()->getKey(res, encryption.uri);
+                // FIXME:- Decode data.
+            }
             else
                 keyCTR = res->getKeyring()->getCustomKey(std::string(encryption.iv.begin(), encryption.iv.end()));
             if(keyCTR.size() != 32)
