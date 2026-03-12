@@ -1013,6 +1013,12 @@ void CommonEncryption::mergeWith(const CommonEncryption &other)
 CommonEncryptionSession::CommonEncryptionSession()
 {
     ctx = nullptr;
+
+    Options.trim                  = false;
+    Options.no_tfdt               = false;
+    Options.tfdt_start            = 0.0;
+    Options.sequence_number_start = 1;
+    Options.force_i_frame_sync    = AP4_FRAGMENTER_FORCE_SYNC_MODE_NONE;
 }
 
 
