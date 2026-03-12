@@ -123,9 +123,11 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
 void CommonEncryptionSession::close()
 {
 #ifdef HAVE_GCRYPT
-    gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
     if(ctx)
+    {
+        gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
         gcry_cipher_close(handle);
+    }
     ctx = nullptr;
 #endif
 }
@@ -136,9 +138,9 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     VLC_UNUSED(inputdata);
     VLC_UNUSED(last);
 #else
-    gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
     if(encryption.method == CommonEncryption::Method::AES_128 && ctx)
     {
+        gcry_cipher_hd_t handle = reinterpret_cast<gcry_cipher_hd_t>(ctx);
         if ((inputbytes % 16) != 0 || inputbytes < 16 ||
             gcry_cipher_decrypt(handle, inputdata, inputbytes, nullptr, 0))
         {
@@ -160,7 +162,12 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     }
     else
 #endif
-    if(encryption.method != CommonEncryption::Method::None)
+    if(encryption.method == CommonEncryption::Method::AES_128_CTR)
+    {
+        // FIXME:- Decrypt.
+        // FIXME:- Fragment.
+    }
+    else if(encryption.method != CommonEncryption::Method::None)
     {
         inputbytes = 0;
     }
