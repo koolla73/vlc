@@ -61,6 +61,27 @@ namespace adaptive
                 std::string keyCTR;
                 CommonEncryption encryption;
                 void *ctx;
+
+                enum ForceSyncMode {
+                    AP4_FRAGMENTER_FORCE_SYNC_MODE_NONE,
+                    AP4_FRAGMENTER_FORCE_SYNC_MODE_AUTO,
+                    AP4_FRAGMENTER_FORCE_SYNC_MODE_ALL
+                };
+
+                struct _Options {
+                    unsigned int  verbosity;
+                    bool          trim;
+                    bool          debug;
+                    bool          no_tfdt;
+                    double        tfdt_start;
+                    unsigned int  sequence_number_start;
+                    ForceSyncMode force_i_frame_sync;
+                    bool          no_zero_elst;
+                } Options;
+
+                static constexpr const unsigned int AP4_FRAGMENTER_DEFAULT_FRAGMENT_DURATION   = 2000;
+                static constexpr const unsigned int AP4_FRAGMENTER_MAX_AUTO_FRAGMENT_DURATION  = 40000;
+                static constexpr const unsigned int AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE      = 1000;
         };
     }
 }
