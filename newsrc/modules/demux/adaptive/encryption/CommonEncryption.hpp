@@ -48,6 +48,7 @@ namespace adaptive
         class CommonEncryptionSession
         {
             public:
+                friend class SegmentChunk;
                 CommonEncryptionSession();
                 ~CommonEncryptionSession();
 
