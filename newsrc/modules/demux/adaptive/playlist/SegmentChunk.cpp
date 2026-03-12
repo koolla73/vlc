@@ -75,7 +75,7 @@ void SegmentChunk::onDownload(block_t **pp_block)
     else if ( encryptionSession && encryptionSession->encryption.method == CommonEncryption::Method::AES_128_CTR && source->getChunkType() == adaptive::http::ChunkType::Segment )
     {
         if ( rep )
-            //
+            rep->prependInitData(*pp_block);
     }
     
     decrypt(pp_block);
