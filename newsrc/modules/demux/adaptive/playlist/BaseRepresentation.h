@@ -95,6 +95,7 @@ namespace adaptive
                 BaseAdaptationSet                  *adaptationSet;
                 uint64_t                            bandwidth;
                 std::list<std::string>              codecs;
+                std::vector<uint8_t>                initData;
         };
     }
 }
