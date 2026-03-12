@@ -69,9 +69,7 @@ namespace adaptive
                 };
 
                 struct _Options {
-                    unsigned int  verbosity;
                     bool          trim;
-                    bool          debug;
                     bool          no_tfdt;
                     double        tfdt_start;
                     unsigned int  sequence_number_start;
