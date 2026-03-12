@@ -22,6 +22,7 @@
 # include "config.h"
 #endif
 
+#include "Ap4.h"
 #include "CommonEncryption.hpp"
 #include "Keyring.hpp"
 #include "../SharedResources.hpp"
@@ -165,7 +166,42 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     if(encryption.method == CommonEncryption::Method::AES_128_CTR)
     {
         // FIXME:- Decrypt.
+        const std::string kid = std::string(encryption.iv.begin(), encryption.iv.end());
+        if (keyCTR.size() != 32 || kid.size() != 32)
+            return 0;
+        
+        unsigned char keyID[16];
+        unsigned char decryptionKey[16];
+        AP4_ParseHex(kid.c_str(), keyID, 16);
+        AP4_ParseHex(keyCTR.c_str(), decryptionKey, 16);
+        
+        AP4_ProtectionKeyMap keyMap;
+        keyMap.SetKeyForKid(keyID, decryptionKey, 16);
+
+        AP4_MemoryByteStream* inputBuffer = new AP4_MemoryByteStream(reinterpret_cast<uint8_t*>(inputdata), inputbytes);
+        AP4_MemoryByteStream* output = new AP4_MemoryByteStream();
+        AP4_CencDecryptingProcessor* processor = new AP4_CencDecryptingProcessor(&keyMap);
+
+        const AP4_Result result = processor->Process(*inputBuffer, *output);
+        delete processor;
+        inputBuffer->Release();
+
+        if (AP4_FAILED(result))
+        {
+            output->Release();
+            return 0;
+        }
+
+        delete[] inputdata;
+        const uint64_t newSize = output->GetDataSize();
+        inputdata = new uint8_t[newSize];
+        memcpy(inputdata, output->GetData(), newSize);
+
+        output->Release();
+        
         // FIXME:- Fragment.
+
+        return newSize;
     }
     else if(encryption.method != CommonEncryption::Method::None)
     {
