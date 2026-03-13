@@ -197,7 +197,7 @@ public:
 };
 
 static void Fragment(AP4_File&                input_file,
-         AP4_ByteStream&          output_stream,
+         AP4_MemoryByteStream&          output_stream,
          AP4_Array<TrackCursor*>& cursors,
          AP4_UI32                 fragment_duration,
          AP4_UI32                 timescale,
@@ -213,7 +213,6 @@ static void Fragment(AP4_File&                input_file,
     // get the movie
     AP4_Movie* input_movie = input_file.GetMovie();
     if (input_movie == NULL) {
-        fprintf(stderr, "ERROR: no moov found in the input file\n");
         return;
     }
 
@@ -237,7 +236,6 @@ static void Fragment(AP4_File&                input_file,
         
         result = cursors[i]->Init();
         if (AP4_FAILED(result)) {
-            fprintf(stderr, "ERROR: failed to init sample cursor (%d), skipping track %d\n", result, track->GetId());
             return;
         }
 
@@ -352,11 +350,7 @@ static void Fragment(AP4_File&                input_file,
     }
     if (anchor_cursor == NULL) {
         // this should never happen
-        fprintf(stderr, "ERROR: no anchor track\n");
         return;
-    }
-    if (Options.debug) {
-        printf("Using track ID %d as anchor\n", anchor_cursor->m_Track->GetId());
     }
     
     // decide which tracks to index and in which order
@@ -403,9 +397,6 @@ static void Fragment(AP4_File&                input_file,
                             cursors[i]->m_Track->GetType() == AP4_Track::TYPE_VIDEO ||
                             cursors[i]->m_Track->GetType() == AP4_Track::TYPE_AUDIO) {
                             anchor_cursor = cursors[i];
-                            if (Options.debug) {
-                                printf("+++ New anchor: Track ID %d\n", anchor_cursor->m_Track->GetId());
-                            }
                         }
                     }
                 }
@@ -455,7 +446,6 @@ static void Fragment(AP4_File&                input_file,
             if (i < cursor->m_Samples->GetSampleCount()) {
                 result = cursor->m_Samples->GetSample(i, sample);
                 if (AP4_FAILED(result)) {
-                    fprintf(stderr, "ERROR: failed to get sample %d (%d)\n", i, result);
                     return;
                 }
                 if (!sample.IsSync()) continue; // only look for sync samples
@@ -463,7 +453,6 @@ static void Fragment(AP4_File&                input_file,
             } else {
                 result = cursor->m_Samples->GetSample(i-1, sample);
                 if (AP4_FAILED(result)) {
-                    fprintf(stderr, "ERROR: failed to get sample %d (%d)\n", i-1, result);
                     return;
                 }
                 dts = sample.GetDts()+sample.GetDuration();
@@ -481,26 +470,6 @@ static void Fragment(AP4_File&                input_file,
             }
         }
         if (cursor->m_Eos) continue;
-        
-        if (Options.debug) {
-            if (cursor == anchor_cursor) {
-                printf("====");
-            } else {
-                printf("----");
-            }
-            printf(" Track ID %d - dts=%lld, target=%lld, start=%d, end=%d/%d\n",
-                   cursor->m_Track->GetId(),
-                   cursor->m_Sample.GetDts(),
-                   target_dts,
-                   cursor->m_SampleIndex,
-                   end_sample_index,
-                   cursor->m_Track->GetSampleCount());
-        }
-        
-        // emit a fragment for the selected track
-        if (Options.verbosity > 1) {
-            printf("fragment: track ID %d\n", cursor->m_Track->GetId());
-        }
 
         // decide which sample description index to use
         // (this is not very sophisticated, we only look at the sample description
@@ -618,23 +587,15 @@ static void Fragment(AP4_File&                input_file,
             cursor->m_Timestamp         = next_scaled_timestamp;
             result = cursor->SetSampleIndex(cursor->m_SampleIndex+1);
             if (AP4_FAILED(result)) {
-                fprintf(stderr, "ERROR: failed to get sample %d (%d)\n", cursor->m_SampleIndex+1, result);
                 return;
             }
             sample_count++;
             if (cursor->m_Eos) {
-                if (Options.debug) {
-                    printf("[Track ID %d has reached the end]\n", cursor->m_Track->GetId());
-                }
                 break;
             }
             if (cursor->m_SampleIndex >= end_sample_index) {
                 break; // done with this fragment
             }
-        }
-        if (Options.verbosity > 2) {
-            printf(" %d samples\n", sample_count);
-            printf(" constant sample duration: %s\n", all_sample_durations_equal?"yes":"no");
         }
         
         // update the flags
@@ -753,21 +714,18 @@ static void Fragment(AP4_File&                input_file,
             // get the sample
             result = fragment->m_Samples->GetSample(fragment->m_SampleIndexes[i], sample);
             if (AP4_FAILED(result)) {
-                fprintf(stderr, "ERROR: failed to get sample %d (%d)\n", fragment->m_SampleIndexes[i], result);
                 return;
             }
 
             // read the sample data
             result = sample.ReadData(sample_data);
             if (AP4_FAILED(result)) {
-                fprintf(stderr, "ERROR: failed to read sample data for sample %d (%d)\n", fragment->m_SampleIndexes[i], result);
                 return;
             }
             
             // write the sample data
             result = output_stream.Write(sample_data.GetData(), sample_data.GetDataSize());
             if (AP4_FAILED(result)) {
-                fprintf(stderr, "ERROR: failed to write sample data (%d)\n", result);
                 return;
             }
         }
@@ -807,7 +765,6 @@ static void Fragment(AP4_File&                input_file,
     mfra.AddChild(mfro);
     result = mfra.Write(output_stream);
     if (AP4_FAILED(result)) {
-        fprintf(stderr, "ERROR: failed to write 'mfra' (%d)\n", result);
         return;
     }
     
@@ -834,11 +791,9 @@ static unsigned int AutoDetectFragmentDuration(TrackCursor* cursor)
     // get the first sample as the starting point
     AP4_Result result = cursor->m_Samples->GetSample(0, sample);
     if (AP4_FAILED(result)) {
-        fprintf(stderr, "ERROR: failed to read first sample\n");
         return 0;
     }
     if (!sample.IsSync()) {
-        fprintf(stderr, "ERROR: first sample is not an I frame\n");
         return 0;
     }
     
@@ -849,7 +804,6 @@ static unsigned int AutoDetectFragmentDuration(TrackCursor* cursor)
         for (i = 0; i < sample_count; i += interval) {
             result = cursor->m_Samples->GetSample(i, sample);
             if (AP4_FAILED(result)) {
-                fprintf(stderr, "ERROR: failed to read sample %d\n", i);
                 return 0;
             }
             if (!sample.IsSync()) {
@@ -863,10 +817,6 @@ static unsigned int AutoDetectFragmentDuration(TrackCursor* cursor)
             // found a pattern
             AP4_UI64 duration = sample.GetDts();
             double fps = (double)(interval*(sync_count-1))/((double)duration/(double)cursor->m_Track->GetMediaTimeScale());
-            if (Options.verbosity > 0) {
-                printf("found regular I-frame interval: %d frames (at %.3f frames per second)\n",
-                       interval, (float)fps);
-            }
             return (unsigned int)(1000.0*(double)interval/fps);
         }
     }
@@ -1155,15 +1105,221 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
         }
 
         delete[] inputdata;
-        const uint64_t newSize = output->GetDataSize();
-        inputdata = new uint8_t[newSize];
-        memcpy(inputdata, output->GetData(), newSize);
-
-        output->Release();
+        inputbytes = 0;
         
-        // FIXME:- Fragment.
+        // Fragment.
+        const char*  track_selector                = NULL;
+        unsigned int fragment_duration             = 0;
+        bool         auto_detect_fragment_duration = true;
+        bool         create_segment_index          = false;
+        bool         copy_udta                     = false;
+        bool         trun_version_one              = true;
+        AP4_UI32     timescale                     = 0;
 
-        return newSize;
+        AP4_MemoryByteStream* output_stream = new AP4_MemoryByteStream();
+        AP4_File input_file(*output, true);
+
+        if (input_file.GetMovie() == NULL) {
+            output->Release();
+            output_stream->Release();
+            return inputbytes;
+        }
+
+        AP4_Array<TrackCursor*> cursors;
+        TrackCursor*  video_track           = NULL;
+        TrackCursor*  audio_track           = NULL;
+        TrackCursor*  subtitles_track       = NULL;
+        TrackCursor*  selected_track        = NULL;
+        unsigned int  video_track_count     = 0;
+        unsigned int  audio_track_count     = 0;
+        unsigned int  subtitles_track_count = 0;
+
+        for (AP4_List<AP4_Track>::Item* track_item = input_file.GetMovie()->GetTracks().FirstItem();
+                                    track_item;
+                                    track_item = track_item->GetNext()) {
+            AP4_Track* track = track_item->GetData();
+    
+            // sanity check
+            if (track->GetSampleCount() == 0 && !input_file.GetMovie()->HasFragments()) {
+                continue;
+            }
+    
+            // create a sample array for this track
+            SampleArray* sample_array;
+            if (input_file.GetMovie()->HasFragments()) {
+                sample_array = new CachedSampleArray(track);
+            } else {
+                sample_array = new SampleArray(track);
+            }
+    
+            // create a cursor for the track
+            TrackCursor* cursor = new TrackCursor(track, sample_array);
+            cursor->m_Tfra->SetTrackId(track->GetId());
+            cursors.Append(cursor);
+    
+            if (track->GetType() == AP4_Track::TYPE_VIDEO) {
+                if (video_track) {
+                    // Warning: More than one video track found.
+                } else {
+                    video_track = cursor;
+                }
+                video_track_count++;
+            } else if (track->GetType() == AP4_Track::TYPE_AUDIO) {
+                if (audio_track == NULL) {
+                    audio_track = cursor;
+                }
+                audio_track_count++;
+            } else if (track->GetType() == AP4_Track::TYPE_SUBTITLES) {
+                if (subtitles_track == NULL) {
+                    subtitles_track = cursor;
+                }
+                subtitles_track_count++;
+            }
+        }
+
+        if (cursors.ItemCount() == 0) {
+            output->Release();
+            output_stream->Release();
+            return inputbytes;
+        }
+
+        if (track_selector) {
+            if (!strncmp("audio", track_selector, 5)) {
+                if (audio_track) {
+                    selected_track = audio_track;
+                } else {
+                    output->Release();
+                    output_stream->Release();
+                    return inputbytes;
+                }
+            } else if (!strncmp("video", track_selector, 5)) {
+                if (video_track) {
+                    selected_track = video_track;
+                } else {
+                    output->Release();
+                    output_stream->Release();
+                    return inputbytes;
+                }
+            } else if (!strncmp("subtitles", track_selector, 9)) {
+                if (subtitles_track) {
+                    selected_track = subtitles_track;
+                } else {
+                    output->Release();
+                    output_stream->Release();
+                    return inputbytes;
+                }
+            } else {
+                AP4_UI32 selected_track_id = (AP4_UI32)strtol(track_selector, NULL, 10);
+                for (unsigned int i=0; i<cursors.ItemCount(); i++) {
+                    if (cursors[i]->m_Track->GetId() == selected_track_id) {
+                        selected_track = cursors[i];
+                        break;
+                    }
+                }
+                if (!selected_track) {
+                    output->Release();
+                    output_stream->Release();
+                    return inputbytes;
+                }
+            }
+        }
+
+        if (video_track_count == 0 && audio_track_count == 0 && subtitles_track_count == 0) {
+            output->Release();
+            output_stream->Release();
+            return inputbytes;
+        }
+
+        AP4_AvcSampleDescription* avc_desc = NULL;
+        if (video_track && (Options.force_i_frame_sync != AP4_FRAGMENTER_FORCE_SYNC_MODE_NONE)) {
+            // that feature is only supported for AVC
+            AP4_SampleDescription* sdesc = video_track->m_Track->GetSampleDescription(0);
+            if (sdesc) {
+                avc_desc = AP4_DYNAMIC_CAST(AP4_AvcSampleDescription, sdesc);
+            }
+            if (avc_desc == NULL) {
+                output->Release();
+                output_stream->Release();
+                return inputbytes;
+            }
+        }
+
+        AP4_Position position;
+        output->Tell(position);
+
+        if (input_file.GetMovie()->HasFragments()) {
+            AP4_LinearReader reader(*input_file.GetMovie(), output);
+            for (unsigned int i=0; i<cursors.ItemCount(); i++) {
+                reader.EnableTrack(cursors[i]->m_Track->GetId());
+            }
+            AP4_UI32 track_id;
+            AP4_Sample sample;
+            do {
+                result = reader.GetNextSample(sample, track_id);
+                if (AP4_SUCCEEDED(result)) {
+                    for (unsigned int i=0; i<cursors.ItemCount(); i++) {
+                        if (cursors[i]->m_Track->GetId() == track_id) {
+                            cursors[i]->m_Samples->AddSample(sample);
+                            break;
+                        }
+                    }
+                }
+            } while (AP4_SUCCEEDED(result));
+            
+        } else if (video_track && (Options.force_i_frame_sync != AP4_FRAGMENTER_FORCE_SYNC_MODE_NONE)) {
+            AP4_Sample sample;
+            if (Options.force_i_frame_sync == AP4_FRAGMENTER_FORCE_SYNC_MODE_AUTO) {
+                // detect if this looks like an open-gop source
+                for (unsigned int i=1; i<video_track->m_Samples->GetSampleCount(); i++) {
+                    if (AP4_SUCCEEDED(video_track->m_Samples->GetSample(i, sample))) {
+                        if (sample.IsSync()) {
+                            // we found a sync i-frame, assume this is *not* an open-gop source
+                            Options.force_i_frame_sync = AP4_FRAGMENTER_FORCE_SYNC_MODE_NONE;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (Options.force_i_frame_sync != AP4_FRAGMENTER_FORCE_SYNC_MODE_NONE) {
+                for (unsigned int i=0; i<video_track->m_Samples->GetSampleCount(); i++) {
+                    if (AP4_SUCCEEDED(video_track->m_Samples->GetSample(i, sample))) {
+                        if (IsIFrame(sample, avc_desc)) {
+                            video_track->m_Samples->ForceSync(i);
+                        }
+                    }
+                }
+            }
+        }
+
+        output->Seek(position);
+
+        if (auto_detect_fragment_duration) {
+            if (video_track) {
+                fragment_duration = AutoDetectFragmentDuration(video_track);
+            } else if (audio_track && input_file.GetMovie()->HasFragments()) {
+                fragment_duration = AutoDetectAudioFragmentDuration(*output, audio_track);
+            }
+            if (fragment_duration == 0) {
+                fragment_duration = AP4_FRAGMENTER_DEFAULT_FRAGMENT_DURATION;
+            } else if (fragment_duration > AP4_FRAGMENTER_MAX_AUTO_FRAGMENT_DURATION) {
+                fragment_duration = AP4_FRAGMENTER_DEFAULT_FRAGMENT_DURATION;
+            }
+        }
+
+        AP4_Array<TrackCursor*> tracks_to_fragment;
+        if (selected_track) {
+            tracks_to_fragment.Append(selected_track);
+        } else {
+            tracks_to_fragment = cursors;
+        }
+        Fragment(input_file, *output_stream, tracks_to_fragment, fragment_duration, timescale, create_segment_index, copy_udta, trun_version_one);
+
+        inputbytes = output_stream->GetDataSize();
+        inputdata = new uint8_t[inputbytes];
+        memcpy(inputdata, output_stream->GetData(), inputbytes);
+
+        if (output)  output->Release();
+        if (output_stream) output_stream->Release();
     }
     else if(encryption.method != CommonEncryption::Method::None)
     {
