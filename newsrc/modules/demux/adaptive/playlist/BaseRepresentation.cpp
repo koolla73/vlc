@@ -38,6 +38,7 @@
 #include "../tools/Helper.h"
 
 #include <limits>
+#include <vlc_common.h>
 
 using namespace adaptive;
 using namespace adaptive::playlist;
