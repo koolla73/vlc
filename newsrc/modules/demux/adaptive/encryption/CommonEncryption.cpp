@@ -242,7 +242,7 @@ static void Fragment(AP4_File&                input_file,
         // adjust the time based on the MPEG time origin
         creation_time = (AP4_UI64)now + 0x7C25B080;
     }
-    AP4_Movie* output_movie = new AP4_Movie(CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE, 0, creation_time, creation_time);
+    AP4_Movie* output_movie = new AP4_Movie(AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE, 0, creation_time, creation_time);
     
     // create an mvex container
     AP4_ContainerAtom* mvex = new AP4_ContainerAtom(AP4_ATOM_TYPE_MVEX);
@@ -268,10 +268,10 @@ static void Fragment(AP4_File&                input_file,
         // create the track
         AP4_Track* output_track = new AP4_Track(sample_table,
                                                 track->GetId(),
-                                                timescale?timescale:CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE,
+                                                timescale?timescale:AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE,
                                                 AP4_ConvertTime(track->GetDuration(),
                                                                 input_movie->GetTimeScale(),
-                                                                timescale?timescale:CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE),
+                                                                timescale?timescale:AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE),
                                                 timescale?timescale:track->GetMediaTimeScale(),
                                                 0,//track->GetMediaDuration(),
                                                 track);
@@ -303,7 +303,7 @@ static void Fragment(AP4_File&                input_file,
                           } else {
                               new_elst_entry.m_SegmentDuration = AP4_ConvertTime(new_elst_entry.m_SegmentDuration,
                                                                                  input_movie->GetTimeScale(),
-                                                                                 CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE);
+                                                                                 AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE);
                           }
                           if (new_elst_entry.m_MediaTime > 0 && timescale) {
                               new_elst_entry.m_MediaTime = (AP4_SI64)AP4_ConvertTime(new_elst_entry.m_MediaTime,
