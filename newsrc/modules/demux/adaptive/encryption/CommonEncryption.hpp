@@ -48,13 +48,13 @@ namespace adaptive
         class CommonEncryptionSession
         {
             public:
-                friend class SegmentChunk;
                 CommonEncryptionSession();
                 ~CommonEncryptionSession();
 
                 bool start(SharedResources *, const CommonEncryption &);
                 void close();
                 size_t decrypt(void *, size_t, bool);
+                CommonEncryption::Method getEncryptionMethod() const { return encryption.method; }
 
             private:
                 std::vector<unsigned char> key;
