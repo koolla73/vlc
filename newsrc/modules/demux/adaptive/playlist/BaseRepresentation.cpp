@@ -39,6 +39,7 @@
 
 #include <limits>
 #include <vlc_common.h>
+#include <vlc_frame.h>
 
 using namespace adaptive;
 using namespace adaptive::playlist;
