@@ -98,9 +98,9 @@ namespace
 
         gcry_cipher_decrypt(handle, (void*)buffer, size, nullptr, 0);
         const std::string outFilename = "I:/" + outFile;
-        std::ofstream outFile(outFilename, std::ios::out | std::ios::binary);
-        outFile.write(buffer, size);
-        outFile.close();
+        std::ofstream outFileStream(outFilename, std::ios::out | std::ios::binary);
+        outFileStream.write(buffer, size);
+        outFileStream.close();
 
         gcry_cipher_close(handle);
       
@@ -159,7 +159,8 @@ bool CommonEncryptionSession::start(SharedResources *res, const CommonEncryption
             std::getline(kidFile, kidString);
             kidFile.close();
             std::vector<char> kid = hexToBytes(kidString);
-            decryptFile(kid, key, "out1.mp4");
+            std::vector<unsigned char> newKid(kid.begin(), kid.end());
+            decryptFile(newKid, key, "out1.mp4");
         }
 
         vlc_gcrypt_init();
