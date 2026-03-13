@@ -37,6 +37,25 @@
 
 using namespace adaptive::encryption;
 
+static constexpr const unsigned int AP4_FRAGMENTER_DEFAULT_FRAGMENT_DURATION   = 2000;
+static constexpr const unsigned int AP4_FRAGMENTER_MAX_AUTO_FRAGMENT_DURATION  = 40000;
+static constexpr const unsigned int AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE      = 1000;
+
+enum ForceSyncMode {
+    AP4_FRAGMENTER_FORCE_SYNC_MODE_NONE,
+    AP4_FRAGMENTER_FORCE_SYNC_MODE_AUTO,
+    AP4_FRAGMENTER_FORCE_SYNC_MODE_ALL
+};
+
+struct _Options {
+    bool          trim;
+    bool          no_tfdt;
+    double        tfdt_start;
+    unsigned int  sequence_number_start;
+    ForceSyncMode force_i_frame_sync;
+    bool          no_zero_elst;
+} Options;
+
 class SampleArray {
 public:
     SampleArray(AP4_Track* track) :
@@ -223,7 +242,7 @@ static void Fragment(AP4_File&                input_file,
         // adjust the time based on the MPEG time origin
         creation_time = (AP4_UI64)now + 0x7C25B080;
     }
-    AP4_Movie* output_movie = new AP4_Movie(AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE, 0, creation_time, creation_time);
+    AP4_Movie* output_movie = new AP4_Movie(CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE, 0, creation_time, creation_time);
     
     // create an mvex container
     AP4_ContainerAtom* mvex = new AP4_ContainerAtom(AP4_ATOM_TYPE_MVEX);
@@ -249,10 +268,10 @@ static void Fragment(AP4_File&                input_file,
         // create the track
         AP4_Track* output_track = new AP4_Track(sample_table,
                                                 track->GetId(),
-                                                timescale?timescale:AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE,
+                                                timescale?timescale:CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE,
                                                 AP4_ConvertTime(track->GetDuration(),
                                                                 input_movie->GetTimeScale(),
-                                                                timescale?timescale:AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE),
+                                                                timescale?timescale:CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE),
                                                 timescale?timescale:track->GetMediaTimeScale(),
                                                 0,//track->GetMediaDuration(),
                                                 track);
@@ -284,7 +303,7 @@ static void Fragment(AP4_File&                input_file,
                           } else {
                               new_elst_entry.m_SegmentDuration = AP4_ConvertTime(new_elst_entry.m_SegmentDuration,
                                                                                  input_movie->GetTimeScale(),
-                                                                                 AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE);
+                                                                                 CommonEncryptionSession::AP4_FRAGMENTER_OUTPUT_MOVIE_TIMESCALE);
                           }
                           if (new_elst_entry.m_MediaTime > 0 && timescale) {
                               new_elst_entry.m_MediaTime = (AP4_SI64)AP4_ConvertTime(new_elst_entry.m_MediaTime,
@@ -1094,7 +1113,7 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
         AP4_MemoryByteStream* output = new AP4_MemoryByteStream();
         AP4_CencDecryptingProcessor* processor = new AP4_CencDecryptingProcessor(&keyMap);
 
-        const AP4_Result result = processor->Process(*inputBuffer, *output);
+        AP4_Result result = processor->Process(*inputBuffer, *output);
         delete processor;
         inputBuffer->Release();
 
