@@ -47,10 +47,11 @@ BaseRepresentation::BaseRepresentation( BaseAdaptationSet *set ) :
                 CommonAttributesElements( set ),
                 SegmentInformation( set ),
                 adaptationSet   ( set ),
-                bandwidth       (0)
+                bandwidth       (0),
+                initData(nullptr),
+                initDataSize(0),
+                hasSavedInitData(false)
 {
-    initData = nullptr;
-    initDataSize = 0;
 }
 
 BaseRepresentation::~BaseRepresentation ()
