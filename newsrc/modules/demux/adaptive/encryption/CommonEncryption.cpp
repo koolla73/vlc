@@ -167,7 +167,7 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     {
         // FIXME:- Decrypt.
         const std::string kid(encryption.iv.begin(), encryption.iv.end());
-        inputbytes = AP4_Decrypt::decrypt(inputdata, inputbytes, kid.c_str(), keyCTR.c_str());
+        inputbytes = AP4_Decrypt::decrypt(reinterpret_cast<uint8_t*>(inputdata), inputbytes, kid.c_str(), keyCTR.c_str());
         
         // FIXME:- Fragment.
     }
