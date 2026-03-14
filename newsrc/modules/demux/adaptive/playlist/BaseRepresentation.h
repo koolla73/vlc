@@ -66,6 +66,8 @@ namespace adaptive
                 void                pruneByPlaybackTime     (vlc_tick_t) override;
                 void                saveInitData            (block_t**);
                 void                prependInitData         (block_t**) const;
+                uint8_t*            getInitData             () const { return initData; }
+                size_t              getInitDataSize         () const { return initDataSize; }
 
                 virtual vlc_tick_t  getMinAheadTime         (uint64_t) const;
                 virtual bool        needsUpdate             (uint64_t) const;
