@@ -167,11 +167,11 @@ void BaseRepresentation::prependInitData(block_t* segmentData) const
     std::vector<uint8_t> segmentDataVector;
     segmentDataVector.resize(segmentData->i_buffer);
     memcpy(segmentDataVector.data(), segmentData->p_buffer, segmentData->i_buffer);
-    delete[] segmentData->p_buffer;
+    free(segmentData->p_buffer);
     segmentData->p_buffer = NULL;
     segmentData->i_buffer = 0;
     const size_t newSize = initData.size() + segmentDataVector.size();
-    segmentData->p_buffer = new uint8_t[newSize];
+    segmentData->p_buffer = (uint8_t*)malloc(newSize);
     segmentData->i_buffer = newSize;
     memcpy(segmentData->p_buffer, initData.data(), initData.size());
     memcpy(segmentData->p_buffer + initData.size(), segmentDataVector.data(), segmentDataVector.size());
