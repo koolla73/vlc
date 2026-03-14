@@ -66,8 +66,6 @@ namespace adaptive
                 void                pruneByPlaybackTime     (vlc_tick_t) override;
                 void                saveInitData            (block_t**);
                 void                prependInitData         (block_t**) const;
-                uint8_t*            getInitData             () const { return initData; }
-                size_t              getInitDataSize         () const { return initDataSize; }
 
                 virtual vlc_tick_t  getMinAheadTime         (uint64_t) const;
                 virtual bool        needsUpdate             (uint64_t) const;
@@ -93,6 +91,8 @@ namespace adaptive
                                                                vlc_tick_t *rangeLength) const;
 
                 bool                                hasSavedInitData;
+                uint8_t*                            initData;
+                size_t                              initDataSize;
 
             protected:
                 virtual CodecDescription * makeCodecDescription(const std::string &) const;
@@ -100,8 +100,6 @@ namespace adaptive
                 BaseAdaptationSet                  *adaptationSet;
                 uint64_t                            bandwidth;
                 std::list<std::string>              codecs;
-                uint8_t*                            initData;
-                size_t                              initDataSize;
         };
     }
 }
