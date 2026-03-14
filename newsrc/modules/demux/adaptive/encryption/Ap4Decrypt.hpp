@@ -14,9 +14,9 @@ public:
 	AP4_Decrypt& operator=(AP4_Decrypt&& other) = delete;
 
 	[[nodiscard]]
-	static size_t decrypt(uint8_t* segmentData, const size_t segmentSize, const char* keyId, const char* key);
-    [[nodiscard]]
-	static size_t decryptAndFragment(uint8_t* segmentData, const size_t segmentSize, const char* keyId, const char* key);
+	static size_t decrypt(uint8_t** segmentData, const size_t segmentSize, const char* keyId, const char* key);
+    
+	static void split(uint8_t** segmentData, size_t& segmentSize, uint8_t** initData, size_t& initSize);
 
 private:
 	void* operator new(size_t);
