@@ -165,11 +165,13 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
 #endif
     if(encryption.method == CommonEncryption::Method::AES_128_CTR)
     {
-        // FIXME:- Decrypt.
         const std::string kid(encryption.iv.begin(), encryption.iv.end());
         inputbytes = AP4_Decrypt::decrypt(reinterpret_cast<uint8_t**>(&inputdata), inputbytes, kid.c_str(), keyCTR.c_str());
         
-        // FIXME:- Fragment.
+        uint8_t* initData = nullptr;
+        size_t initSize = 0;
+        AP4_Decrypt::split(reinterpret_cast<uint8_t**>(&inputdata), inputbytes, &initData, initSize);
+        free(initData);
     }
     else if(encryption.method != CommonEncryption::Method::None)
     {
