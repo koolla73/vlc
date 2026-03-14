@@ -49,10 +49,17 @@ BaseRepresentation::BaseRepresentation( BaseAdaptationSet *set ) :
                 adaptationSet   ( set ),
                 bandwidth       (0)
 {
+    initData = nullptr;
+    initDataSize = 0;
 }
 
 BaseRepresentation::~BaseRepresentation ()
 {
+    if (initData)
+    {
+        free(initData);
+        initData = nullptr;
+    }
 }
 
 StreamFormat BaseRepresentation::getStreamFormat() const
@@ -156,26 +163,31 @@ void BaseRepresentation::pruneByPlaybackTime(vlc_tick_t time)
         pruneBySegmentNumber(num);
 }
 
-void BaseRepresentation::saveInitData(block_t* newInitData)
+void BaseRepresentation::saveInitData(block_t** newInitData)
 {
-    initData.clear();
-    initData.resize(newInitData->i_buffer);
-    memcpy(initData.data(), newInitData->p_buffer, newInitData->i_buffer);
+    if (initData)
+    {
+        free(initData);
+        initData = nullptr;
+        initDataSize = 0;
+    }
+    initData = (uint8_t*)malloc(*newInitData->i_buffer);
+    memcpy(initData, *newInitData->p_buffer, *newInitData->i_buffer);
+    initDataSize = *newInitData->i_buffer;
 }
 
-void BaseRepresentation::prependInitData(block_t* segmentData) const
+void BaseRepresentation::prependInitData(block_t** segmentData) const
 {
-    std::vector<uint8_t> segmentDataVector;
-    segmentDataVector.resize(segmentData->i_buffer);
-    memcpy(segmentDataVector.data(), segmentData->p_buffer, segmentData->i_buffer);
-    free(segmentData->p_buffer);
-    segmentData->p_buffer = NULL;
-    segmentData->i_buffer = 0;
-    const size_t newSize = initData.size() + segmentDataVector.size();
-    segmentData->p_buffer = (uint8_t*)malloc(newSize);
-    segmentData->i_buffer = newSize;
-    memcpy(segmentData->p_buffer, initData.data(), initData.size());
-    memcpy(segmentData->p_buffer + initData.size(), segmentDataVector.data(), segmentDataVector.size());
+    const size_t tempStorage = *segmentData->i_buffer;
+    uint8_t* temp = (uint8_t*)malloc(tempStorage);
+    memcpy(temp, *segmentData->p_buffer, tempStorage);
+    free(*segmentData->p_buffer);
+    *segmentData->p_buffer = NULL;
+    *segmentData->i_buffer = 0;
+    *segmentData->p_buffer = (uint8_t*)malloc(initDataSize + tempStorage);
+    memcpy(*segmentData->p_buffer, initData, initDataSize);
+    memcpy(*segmentData->p_buffer + initData, temp, tempStorage);
+    free(temp);
 }
 
 vlc_tick_t BaseRepresentation::getMinAheadTime(uint64_t curnum) const
