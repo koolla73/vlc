@@ -23,6 +23,7 @@
 #endif
 
 #include "CommonEncryption.hpp"
+#include "Ap4Decrypt.hpp"
 #include "Keyring.hpp"
 #include "../SharedResources.hpp"
 
@@ -165,6 +166,9 @@ size_t CommonEncryptionSession::decrypt(void *inputdata, size_t inputbytes, bool
     if(encryption.method == CommonEncryption::Method::AES_128_CTR)
     {
         // FIXME:- Decrypt.
+        const std::string kid(encryption.iv.begin(), encryption.iv.end());
+        inputbytes = AP4_Decrypt::decrypt(inputdata, inputbytes, kid.c_str(), keyCTR.c_str());
+        
         // FIXME:- Fragment.
     }
     else if(encryption.method != CommonEncryption::Method::None)
