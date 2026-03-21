@@ -1,0 +1,52 @@
+name: Build VLC for Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+            
+      - name: Download VLC source code
+        run: git clone --depth 1 -b master https://github.com/videolan/vlc
+          
+      - name: Copy modified source code to VLC folders
+        run: cp -R ${{ github.workspace }}/newsrc/* ${{ github.workspace }}/vlc
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install autopoint gcc-mingw-w64-x86-64 gettext g++-mingw-w64-x86-64 mingw-w64-tools yasm
+
+      - name: Compile VLC
+        run: |
+          mkdir vlc-installed
+          mkdir build
+          cd build
+          CONFIGFLAGS="--disable-sout --disable-lua --disable-vlm --disable-archive --disable-live555 --disable-dc1394 --disable-dv1394 --disable-linsys \
+          --disable-dvdread --disable-dvdnav --disable-bluray --disable-opencv --disable-smbclient --disable-dsm --disable-sftp --disable-nfs --disable-smb2 --disable-v4l2 --disable-amf-scaler \
+          --disable-amf-enhancer --disable-amf-frc --disable-decklink --disable-vcd --disable-vnc --disable-freerdp --disable-asdcp --disable-dvbpsi --disable-dvbcsa --disable-gme --disable-sid \
+          --disable-ogg --disable-shout --disable-matroska --disable-mod --disable-mpc --disable-shine --disable-omxil --disable-rpi-omxil --disable-mad --disable-mpg123 --disable-gst-decode \
+          --disable-aom --disable-rav1e --disable-dav1d --disable-vpx --disable-twolame --disable-fdkaac --disable-flac --disable-vorbis --disable-tremor --disable-speex --disable-rnnoise --disable-opus \
+          --disable-theora --disable-oggspots --disable-daala --disable-openapv --disable-bpg --disable-x262 --disable-x265 --disable-x264 --disable-x26410b --disable-davs2 --disable-fluidsynth \
+          --disable-fluidlite --disable-zvbi --disable-telx --disable-aribcaption --disable-aribsub --disable-aribb25 --disable-kate --disable-tiger --disable-css --disable-xcb --disable-vdpau \
+          --disable-svg --disable-svgdec --disable-caca --disable-kva --disable-mmal --disable-pulse --disable-alsa --disable-oss --disable-sndio --disable-jack --disable-opensles --disable-soxr \
+          --disable-kai --disable-chromaprint --disable-chromecast --disable-qt --disable-skins2 --disable-ncurses --disable-lirc --disable-srt --disable-rist --disable-goom --disable-projectm \
+          --disable-vsxu --disable-avahi --disable-udev --disable-mtp --disable-upnp --disable-microdns --disable-taglib --disable-secret --disable-kwallet --disable-update-check \
+          --disable-osx-notifications --disable-notify --disable-medialibrary --disable-vlc" ../vlc/extras/package/win32/build.sh -a x86_64 -z -o ${{ github.workspace }}/vlc-installed
+
+      - name: Upload VLC
+        uses: actions/upload-artifact@v7
+        with:
+          name: VLC-Windows
+          path: ${{ github.workspace }}/vlc-installed
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
