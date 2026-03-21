@@ -61,17 +61,6 @@ jobs:
           sudo make install
           sudo ldconfig
 
-      - name: Copy VLC libraries and headers to sample application folder
-        run: |
-          mkdir sampleapp
-          cd sampleapp
-          mkdir include
-          mkdir lib
-          cp -R /usr/local/include/vlc ${{ github.workspace }}/sampleapp/include
-          cp /usr/local/lib/libvlc.* ${{ github.workspace }}/sampleapp/lib
-          cp /usr/local/lib/libvlccore.* ${{ github.workspace }}/sampleapp/lib
-          cp -R /usr/local/lib/vlc ${{ github.workspace }}/sampleapp/lib
-
       - name: Upload VLC
         uses: actions/upload-artifact@v7
         with:
